@@ -1,4 +1,6 @@
-﻿(*
+﻿open System
+
+(*
 All source material for this dojo can be found at:
 https://github.com/c4fsharp/Dojo-Markov-Bot
 
@@ -26,7 +28,7 @@ words), and then suggest directions to
 explore further!
 *)
 
-// Sample text: "What a Wonderful World"
+// Sample text:"What a Wonderful World"
 // http://en.wikipedia.org/wiki/What_a_Wonderful_World
 
 let sample = """
@@ -54,7 +56,7 @@ Yes, I think to myself
 What a wonderful world"""
 
 (* 
-Chapter 1: Breaking the input into bi-grams
+Chapter 1:Breaking the input into bi-grams
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
 Your goal here is to take the input text, and
@@ -80,17 +82,20 @@ let byFive =
 
 // </useful bits of code for inspiration> 
 
-// TODO: WRITE A FUNCTION 
+// TODO:WRITE A FUNCTION 
 // let bigramify (text:string) = ...
 // THAT BREAKS A TEXT INTO AN ARRAY OF BIGRAMS
 
 let bigramify (text:string) =
     // [ YOUR CODE GOES HERE ]
-    Array.empty<string[]>
+    text.Split null
+    |> Seq.windowed 2
+    |> Seq.filter (fun bigram -> Array.forall (fun element -> element <> String.Empty) bigram)
+    //Array.empty<string[]>
 
 
 (* 
-Chapter 2: Finding next word candidates
+Chapter 2:Finding next word candidates
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
 Now that you have isolated bi-grams, given a 
@@ -112,25 +117,29 @@ let pairs =
 
 let endsWithTwo = 
     pairs 
-    |> Seq.filter (fun pair -> pair.[1] = 2)
-    |> Seq.toArray
+    |> Array.filter (fun pair -> pair.[1] = 2)
 
 let secondElements = 
-    pairs |> Array.map (fun pair -> pair.[1])
+    pairs
+    |> Array.map (fun pair -> pair.[1])
 
 // </useful bits of code for inspiration>
 
-// TODO: WRITE A FUNCTION 
+// TODO:WRITE A FUNCTION 
 // let nextWords ... = ...
 // THAT RETURNS ALL WORDS FOLLOWING A GIVEN WORD.
 
 let nextWords (bigrams:string[] seq) (word:string) =
     // [ YOUR CODE GOES HERE ]
-    [| "this"; "is"; "an"; "example" |]
-    
-    
+    bigrams
+    |> Seq.filter (fun pair -> pair.[0] = word)
+    |> Seq.toArray
+    |> Array.map (fun pair -> pair.[1])
+    //[| "this"; "is"; "an"; "example" |]
+
+
 (* 
-Chapter 3: Generating a "sentence"
+Chapter 3:Generating a "sentence"
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
 Almost there! The only thing we need now is to
@@ -167,7 +176,7 @@ repeatNtimes 3 "Hello?"
 // </useful bits of code for inspiration>
 
 
-// TODO: WRITE A FUNCTION 
+// TODO:WRITE A FUNCTION 
 // let generateWords ... = ...
 // THAT BREAKS SAMPLE TEXT INTO BI-GRAMS, AND
 // STARTING FROM AN INPUT WORD, PRODUCES A
@@ -178,11 +187,28 @@ let generateWords (sample:string) (firstWord:string) =
     // 1. extract bi-grams from sample
     // 2. recursively append words based
     // on bi-grams, starting from firstWord
-    "not implemented yet!"
+    let generator = new Random()
+    let rec appendSuccesors (sampleBigrams:string[] seq) (currentWord:string) (currentString:string) (n:int) =
+        match n with
+        | n when n > 0 ->
+            let nextWordList = nextWords sampleBigrams currentWord
+            match nextWordList.Length with
+            | 0 -> currentString
+            | _ ->
+                let nextWord = nextWordList.[generator.Next(nextWordList.Length)]
+                appendSuccesors sampleBigrams nextWord (currentString + " " + nextWord) (n - 1)
+        | _ -> currentString
+    let length = generator.Next()
+    let bigrams =
+        sample
+        |> bigramify
+    appendSuccesors bigrams firstWord firstWord length
+    //"not implemented yet!"
 
+generateWords sample "The"
 
 (* 
-Next episode: Have fun!
+Next episode:Have fun!
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
 By now, you should have a function generateWords
@@ -229,7 +255,7 @@ it difficult to find (for instance) where a
 sentence starts or ends, and identifying good
 points to stop generating words.
 
-5. Create a Markov buddy: write a bot that 
+5. Create a Markov buddy:write a bot that 
 responds to user input, with a sentence that is
 "reasonable". 
 

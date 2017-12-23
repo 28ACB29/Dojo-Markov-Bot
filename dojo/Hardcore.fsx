@@ -1,4 +1,6 @@
-﻿(*
+﻿open System
+
+(*
 All source material for this dojo can be found at:
 https://github.com/c4fsharp/Dojo-Markov-Bot
 
@@ -56,7 +58,26 @@ that word, with one successor "so", and repeat.
 That's it - make it work!
 *)
 
-// Sample text: What a Wonderful World
+let generateWords (sample:string) (firstWord:string) =
+    let generator = new Random()
+    let rec appendSuccesors (sampleBigrams:string[][]) (currentWord:string) (currentString:string) (n:int) =
+        match n with
+        | n when n > 0 ->
+            let nextWordList = 
+                sampleBigrams
+                |> Array.filter (fun pair -> pair.[0] = currentWord)
+                |> Array.map (fun pair -> pair.[1])
+            let nextWord = nextWordList.[generator.Next(nextWordList.Length)]
+            appendSuccesors sampleBigrams nextWord (currentString + nextWord) (n - 1)
+        | _ -> currentString
+    let bigrams =
+        sample.Split null
+        |> Array.windowed 2
+        |> Array.filter (fun bigram -> Array.forall (fun element -> element <> String.Empty) bigram)
+    let length = generator.Next()
+    appendSuccesors bigrams firstWord firstWord length
+
+// Sample text:What a Wonderful World
 // http://en.wikipedia.org/wiki/What_a_Wonderful_World
 
 let sample = """
@@ -85,7 +106,7 @@ What a wonderful world"""
 
 
 (* 
-Next episode: Have fun!
+Next episode:Have fun!
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
 By now, you should have a function generateWords
@@ -132,7 +153,7 @@ it difficult to find (for instance) where a
 sentence starts or ends, and identifying good
 points to stop generating words.
 
-5. Create a Markov buddy: write a bot that 
+5. Create a Markov buddy:write a bot that 
 responds to user input, with a sentence that is
 "reasonable". 
 
