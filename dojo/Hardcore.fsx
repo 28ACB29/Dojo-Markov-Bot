@@ -58,24 +58,24 @@ that word, with one successor "so", and repeat.
 That's it - make it work!
 *)
 
-let generateWords (sample:string) (firstWord:string) =
+let generateWords (sample:string) (firstWord:string) (n:int) =
     let generator = new Random()
-    let rec appendSuccesors (sampleBigrams:string[][]) (currentWord:string) (currentString:string) (n:int) =
-        match n with
-        | n when n > 0 ->
+    let rec appendSuccesors (sampleBigrams:string[][]) (currentWord:string) (currentString:string) (iterations:int) =
+        match iterations with
+        | iterations when iterations > 0 ->
             let nextWordList = 
                 sampleBigrams
-                |> Array.filter (fun pair -> pair.[0] = currentWord)
-                |> Array.map (fun pair -> pair.[1])
+                |> Array.filter (fun ngram -> ngram.[0] = currentWord)
+                |> Array.map (fun ngram -> ngram.[n - 1])
             let nextWord = nextWordList.[generator.Next(nextWordList.Length)]
-            appendSuccesors sampleBigrams nextWord (currentString + nextWord) (n - 1)
+            appendSuccesors sampleBigrams nextWord (currentString + " " + nextWord) (iterations - 1)
         | _ -> currentString
-    let bigrams =
+    let ngrams =
         sample.Split null
-        |> Array.windowed 2
-        |> Array.filter (fun bigram -> Array.forall (fun element -> element <> String.Empty) bigram)
+        |> Array.windowed n
+        |> Array.filter (fun ngram -> Array.forall (fun element -> element <> String.Empty) ngram)
     let length = generator.Next()
-    appendSuccesors bigrams firstWord firstWord length
+    appendSuccesors ngrams firstWord firstWord length
 
 // Sample text:What a Wonderful World
 // http://en.wikipedia.org/wiki/What_a_Wonderful_World
